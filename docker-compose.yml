@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  server:
+    container_name: otel-emitter
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/go/app
+    ports:
+      - 8000:80
+    environment:
+      - AWS_XRAY_DAEMON_ADDRESS=otel-collector:2000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - AWS_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+  otel-collector:
+    image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+    command: [ "--config=/etc/otel-config.yaml" ]
+    volumes:
+      - ./otel-config.yaml:/etc/otel-config.yaml
+    environment:
+      - AWS_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    ports:
+      - 4317:4317
